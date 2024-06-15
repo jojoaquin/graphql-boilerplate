@@ -1,0 +1,8 @@
+type QueryResponse {
+    name: String
+    error: [Error!]
+}
+
+type Query {
+    me(name: String): QueryResponse!
+}
