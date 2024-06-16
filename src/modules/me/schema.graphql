@@ -1,8 +1,8 @@
-type QueryResponse {
-    name: String
-    error: [Error!]
+type User {
+    id: String
+    email: String
 }
 
 type Query {
-    me(name: String): QueryResponse!
+    me: User
 }

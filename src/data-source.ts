@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
   password: "joaquin",
   database: "graphql_boilerplate",
   synchronize: true,
-  logging: false,
+  logging: true,
   dropSchema: false,
   entities: [User],
   migrations: [],

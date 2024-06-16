@@ -1,3 +1,4 @@
+import { isAuthMiddleware } from "./middleware";
 import { genSchema } from "./utils/genSchema";
 import { confirmEmail } from "./routes/confirmEmail";
 import { redis } from "./redis";
@@ -6,7 +7,6 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import express from "express";
 import { applyMiddleware } from "graphql-middleware";
-import { middleware } from "./middleware";
 import session from "express-session";
 import RedisStore from "connect-redis";
 import cors from "cors";
@@ -16,10 +16,20 @@ export const startServer = async () => {
 
   const app = express();
 
-  const schemaWithMiddleware = applyMiddleware(schema, middleware);
+  const schemaWithMiddleware = applyMiddleware(schema, isAuthMiddleware);
 
   const server = new ApolloServer({
     schema: schemaWithMiddleware,
+    formatError: (error) => {
+      return {
+        message: error.message,
+        locations: error.locations,
+        path: error.path,
+        extensions: {
+          code: error.extensions!.code,
+        },
+      };
+    },
   });
 
   await server.start();
