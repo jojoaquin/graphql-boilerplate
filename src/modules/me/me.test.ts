@@ -6,15 +6,17 @@ import axios from "axios";
 
 const email = "tom@bob.com";
 const password = "jalksdf";
+let userId = "";
 
 beforeAll(async () => {
   await createTypeOrmConn();
   const hashedPassword = await bcrypt.hash(password, 12);
-  await User.create({
+  const user = await User.create({
     email,
     password: hashedPassword,
     confirmed: true,
   }).save();
+  userId = user.id;
 });
 
 const login = (e: string, p: string) => `
@@ -26,38 +28,52 @@ mutation {
 }
 `;
 
-const logout = `
-mutation Mutation {
-  logout
+const meQuery = `
+query Me {
+  me {
+    id
+    email
+  }
 }
-  `;
+`;
 
 describe("me test", () => {
   it("should return null if no cookie", async () => {
     const response = await axios.post(url, {
-      query: logout,
+      query: meQuery,
     });
-    expect(response.data.data).toBeNull();
+    expect(response.data.data.me).toBeNull();
   });
 
-  it("should logout true", async () => {
-    const loginResponse = await axios.post(url, {
-      query: login(email, password),
-    });
-    const cookie = loginResponse.headers["set-cookie"];
+  it("should return user if have cookie", async () => {
+    const response2 = await axios.post(
+      url,
+      {
+        query: login(email, password),
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    const cookies = response2.headers["set-cookie"];
 
     const response = await axios.post(
       url,
       {
-        query: logout,
+        query: meQuery,
       },
       {
         headers: {
-          Cookie: cookie,
+          Cookie: cookies,
         },
+        withCredentials: true,
       }
     );
 
-    expect(response.data.data.logout).toBeTruthy;
+    expect(response.data.data.me).toEqual({
+      id: userId,
+      email,
+    });
   });
 });

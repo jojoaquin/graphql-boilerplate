@@ -1,3 +1,4 @@
+import { userSessionIdPrefix } from "./../../constant";
 import { MutationLoginArgs } from "./../../types/generated.d";
 import { User } from "./../../entity/User";
 import { ResolverMap } from "./../../types/graphql-utils.d";
@@ -12,7 +13,7 @@ const errorResponse = [
 
 const resolvers: ResolverMap = {
   Mutation: {
-    login: async (_, args: MutationLoginArgs, { session }) => {
+    login: async (_, args: MutationLoginArgs, { session, redis }) => {
       const { email, password } = args;
       const user = await User.findOne({ where: { email } });
 
@@ -36,7 +37,7 @@ const resolvers: ResolverMap = {
       }
 
       session.userId = user.id;
-      console.info(session);
+      await redis.set(`${userSessionIdPrefix}${user.id}`, user.id);
 
       return null;
     },
