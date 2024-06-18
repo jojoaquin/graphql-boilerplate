@@ -1,4 +1,4 @@
-import { userSessionIdPrefix } from "./../../constant";
+import { listLoginUserKey, userSessionIdPrefix } from "./../../constant";
 import { MutationLoginArgs } from "./../../types/generated.d";
 import { User } from "./../../entity/User";
 import { ResolverMap } from "./../../types/graphql-utils.d";
@@ -37,7 +37,7 @@ const resolvers: ResolverMap = {
       }
 
       session.userId = user.id;
-      await redis.set(`${userSessionIdPrefix}${user.id}`, user.id);
+      await redis.lpush(listLoginUserKey, `${userSessionIdPrefix}${user.id}`);
 
       return null;
     },

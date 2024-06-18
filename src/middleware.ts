@@ -1,4 +1,4 @@
-import { userSessionIdPrefix } from "./constant";
+import { listLoginUserKey, userSessionIdPrefix } from "./constant";
 import { Context } from "./types/graphql-utils.d";
 import throwCustomError from "./utils/throwCustomError";
 
@@ -13,10 +13,18 @@ const isAuth = async (
     throwCustomError("Not Auth", "UNAUTHORIZED");
   }
 
-  const userId = await context.redis.get(
-    `${userSessionIdPrefix}${context.session.userId}`
-  );
-  if (!userId) {
+  let found: string | undefined;
+  await context.redis.lrange(listLoginUserKey, 0, -1, async (err, res) => {
+    if (err) console.log("err range middleware: " + err);
+
+    if (res) {
+      found = res.find((value) => {
+        return value === `${userSessionIdPrefix}${context.session.userId}`;
+      });
+    }
+  });
+
+  if (!found) {
     throwCustomError("You have been logout, try to login", "UNAUTHORIZED");
   }
 
